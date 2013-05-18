@@ -8,7 +8,7 @@ use Pod::Usage;
 use File::MMagic;
 
 my $git = 'git';
-my @gitargs = ();
+my @gitargs = ('--no-pager');
 my $verbose = 0;
 Getopt::Long::Configure ("bundling");
 GetOptions(
