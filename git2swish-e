@@ -24,6 +24,7 @@ while (my $line = <$listing>) {
     chomp $line;
     $line =~ /^(\d{6}) (\S+) ([0-9a-f]{40}) +(\d+)\t(.*)$/ or die $line;
     my ($perm, $type, $hash, $size, $path) = ($1, $2, $3, $4, $5);
+    next if ($type ne 'blob');  # should never be true
     open(my $blob, '-|', qw(git cat-file), $type, $hash);
     my $data;
     read($blob, $data, 4096);
