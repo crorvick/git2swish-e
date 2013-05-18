@@ -8,18 +8,18 @@ use Pod::Usage;
 use File::MMagic;
 
 my $git = 'git';
-my %gitargs = ();
+my @gitargs = ();
 my $verbose = 0;
 Getopt::Long::Configure ("bundling");
 GetOptions(
   'git-cmd=s'   => \$git,
-  'git-dir=s'   => sub { my ($arg, $val) = @_; $gitargs{$arg} = $val },
+  'git-dir=s'   => sub { my ($arg, $val) = @_; push @gitargs, "--$arg=$val" },
   'v|verbose+'  => \$verbose,
   'h|help|?'    => sub { pod2usage(1) },
   'man'         => sub { pod2usage(-exitstatus => 0, -verbose => 2) }
 ) or pod2usage(2);
 
-my @gitcmd = ($git, map { "--$_=$gitargs{$_}" } keys %gitargs);
+my @gitcmd = ($git, @gitargs);
 my $ref = @ARGV ? shift @ARGV : 'HEAD';
 
 my $mm = new File::MMagic;
