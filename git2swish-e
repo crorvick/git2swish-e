@@ -14,7 +14,7 @@ Getopt::Long::Configure ("bundling");
 GetOptions(
   'git-cmd=s'   => \$git,
   'git-dir=s'   => sub { my ($arg, $val) = @_; $gitargs{$arg} = $val },
-  'v|verbose'   => sub { $verbose = 1 },
+  'v|verbose+'  => \$verbose,
   'h|help|?'    => sub { pod2usage(1) },
   'man'         => sub { pod2usage(-exitstatus => 0, -verbose => 2) }
 ) or pod2usage(2);
