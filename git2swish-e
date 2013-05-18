@@ -87,6 +87,7 @@ is not specified, defaults to C<HEAD>.
 
 =head1 SEE ALSO
 
+git(1)
 http://swish-e.org/docs/swish-run.html#indexing
 
 =head1 AUTHOR
