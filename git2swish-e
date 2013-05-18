@@ -1,0 +1,79 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+use File::MMagic;
+
+my $verbose = 0;
+Getopt::Long::Configure ("bundling");
+GetOptions(
+  'v|verbose'   => sub { $verbose = 1 },
+  'h|help|?'    => sub { pod2usage(1) },
+  'man'         => sub { pod2usage(-exitstatus => 0, -verbose => 2) }
+) or pod2usage(2);
+
+my $ref = @ARGV ? shift @ARGV : 'HEAD';
+
+my $mm = new File::MMagic;
+
+open(my $listing, '-|', 'git', 'ls-tree', '--full-name', '-l', '-r', $ref);
+while (my $line = <$listing>) {
+    chomp $line;
+    $line =~ /^(\d{6}) (\S+) ([0-9a-f]{40}) +(\d+)\t(.*)$/ or die $line;
+    my ($perm, $type, $hash, $size, $path) = ($1, $2, $3, $4, $5);
+    open(my $blob, '-|', 'git', 'cat-file', $type, $hash);
+    my $data;
+    read($blob, $data, 4096);
+    my $mime_type = $mm->checktype_contents($data);
+    print STDERR "$line ($mime_type)\n" if ($verbose);
+    my $swish_type
+        = $mime_type eq 'text/html' ? 'HTML'
+        : $mime_type eq 'text/xml'  ? 'XML'
+        : $mime_type =~ m|^text/|   ? 'TXT'
+        : next;  # skip binary files
+    print <<EOF;
+Path-Name: $path
+Content-Length: $size
+Document-Type: $swish_type
+
+EOF
+    if ($data) {
+        print $data;
+        print $data while (read($blob, $data, 4096));
+    }
+    close($blob);
+}
+close($listing);
+
+__END__
+
+=head1 NAME
+
+git2swish-e - dump Git commit to swish-e input format
+
+=head1 SYNOPSIS
+
+B<git2swish-e> [OPTION]... [<ref>]
+
+ Options:
+    -v, --verbose
+    -?, -h, --help
+
+=head1 DESCRIPTION
+
+Dump a Git commit formatted for input to the swish-e indexer.  If C<ref>
+is not specified, defaults to C<HEAD>.
+
+    -v, --verbose
+        Print verbose output to stderr.
+
+=head1 SEE ALSO
+
+http://swish-e.org/docs/swish-run.html#indexing
+
+=head1 AUTHOR
+
+Chris Rorvick <chris@rorvick.com>
