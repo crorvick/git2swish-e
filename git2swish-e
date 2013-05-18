@@ -7,26 +7,29 @@ use Getopt::Long;
 use Pod::Usage;
 use File::MMagic;
 
+my $git = 'git';
 my $verbose = 0;
 Getopt::Long::Configure ("bundling");
 GetOptions(
+  'git-cmd=s'   => \$git,
   'v|verbose'   => sub { $verbose = 1 },
   'h|help|?'    => sub { pod2usage(1) },
   'man'         => sub { pod2usage(-exitstatus => 0, -verbose => 2) }
 ) or pod2usage(2);
 
+my @gitcmd = $git;
 my $ref = @ARGV ? shift @ARGV : 'HEAD';
 
 my $mm = new File::MMagic;
 
-open(my $listing, '-|', qw(git ls-tree --full-name -l -r), $ref) or die;
+open(my $listing, '-|', @gitcmd, qw(ls-tree --full-name -l -r), $ref) or die;
 while (my $line = <$listing>) {
     chomp $line;
     $line =~ /^(\d{6}) (\S+) ([0-9a-f]{40}) +(\d+)\t(.*)$/
         or die "Unexpected output from Git tree listing:\n$line\n";
     my ($perm, $type, $hash, $size, $path) = ($1, $2, $3, $4, $5);
     next if ($type ne 'blob');  # should never be true
-    open(my $blob, '-|', qw(git cat-file), $type, $hash) or die;
+    open(my $blob, '-|', @gitcmd, 'cat-file', $type, $hash) or die;
     my $data;
     read($blob, $data, 4096);
     my $mime_type = $mm->checktype_contents($data);
@@ -61,6 +64,7 @@ git2swish-e - dump Git commit to swish-e input format
 B<git2swish-e> [OPTION]... [<ref>]
 
  Options:
+    --git-cmd=BIN
     -v, --verbose
     -?, -h, --help
 
@@ -68,6 +72,9 @@ B<git2swish-e> [OPTION]... [<ref>]
 
 Dump a Git commit formatted for input to the swish-e indexer.  If C<ref>
 is not specified, defaults to C<HEAD>.
+
+    --git-cmd=BIN
+        Specify the Git binary to run.
 
     -v, --verbose
         Print verbose output to stderr.
