@@ -8,16 +8,18 @@ use Pod::Usage;
 use File::MMagic;
 
 my $git = 'git';
+my %gitargs = ();
 my $verbose = 0;
 Getopt::Long::Configure ("bundling");
 GetOptions(
   'git-cmd=s'   => \$git,
+  'git-dir=s'   => sub { my ($arg, $val) = @_; $gitargs{$arg} = $val },
   'v|verbose'   => sub { $verbose = 1 },
   'h|help|?'    => sub { pod2usage(1) },
   'man'         => sub { pod2usage(-exitstatus => 0, -verbose => 2) }
 ) or pod2usage(2);
 
-my @gitcmd = $git;
+my @gitcmd = ($git, map { "--$_=$gitargs{$_}" } keys %gitargs);
 my $ref = @ARGV ? shift @ARGV : 'HEAD';
 
 my $mm = new File::MMagic;
@@ -65,6 +67,7 @@ B<git2swish-e> [OPTION]... [<ref>]
 
  Options:
     --git-cmd=BIN
+    --git-dir=REPO
     -v, --verbose
     -?, -h, --help
 
@@ -75,6 +78,9 @@ is not specified, defaults to C<HEAD>.
 
     --git-cmd=BIN
         Specify the Git binary to run.
+
+    --git-dir=REPO
+        Set the path to the Git repository.
 
     -v, --verbose
         Print verbose output to stderr.
