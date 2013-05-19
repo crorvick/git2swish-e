@@ -30,7 +30,10 @@ while (my $line = <$listing>) {
     $line =~ /^(\d{6}) (\S+) ([0-9a-f]{40}) +(\d+)\t(.*)$/
         or die "Unexpected output from Git tree listing:\n$line\n";
     my ($perm, $type, $hash, $size, $path) = ($1, $2, $3, $4, $5);
-    next if ($type ne 'blob');  # should never be true
+    if ($type ne 'blob') {
+        warn "Skipping unexpected '$type' object: $path\n";
+        next;
+    }
     open(my $blob, '-|', @gitcmd, 'cat-file', $type, $hash) or die;
     my $data;
     read($blob, $data, 4096);
