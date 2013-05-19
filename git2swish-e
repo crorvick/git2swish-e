@@ -7,11 +7,13 @@ use Getopt::Long;
 use Pod::Usage;
 use File::MMagic;
 
+my $prefix = '';
 my $git = 'git';
 my @gitargs = ('--no-pager');
 my $verbose = 0;
 Getopt::Long::Configure ("bundling");
 GetOptions(
+  'prefix=s'    => \$prefix,
   'git-cmd=s'   => \$git,
   'git-dir=s'   => sub { my ($arg, $val) = @_; push @gitargs, "--$arg=$val" },
   'v|verbose+'  => \$verbose,
@@ -45,7 +47,7 @@ while (my $line = <$listing>) {
         : $mime_type =~ m|^text/|   ? 'TXT'
         : next;  # skip binary files
     print <<EOF;
-Path-Name: $path
+Path-Name: $prefix$path
 Content-Length: $size
 Document-Type: $swish_type
 
@@ -69,6 +71,7 @@ git2swish-e - dump Git commit to swish-e input format
 B<git2swish-e> [OPTION]... [<ref>]
 
  Options:
+    --prefix=PREFIX
     --git-cmd=BIN
     --git-dir=REPO
     -v, --verbose
@@ -78,6 +81,9 @@ B<git2swish-e> [OPTION]... [<ref>]
 
 Dump a Git commit formatted for input to the swish-e indexer.  If C<ref>
 is not specified, defaults to C<HEAD>.
+
+    --prefix=PREFIX
+        Prepend PREFIX to paths in swish-e output.
 
     --git-cmd=BIN
         Specify the Git binary to run.
